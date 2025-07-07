@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.font-paytone {
+  font-family: 'Paytone One', sans-serif;
+}
+
+.hide-scrollbar {
+  overflow: auto; /* or overflow-y: auto for vertical scrolling only */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+.gradBorder {
+  position: relative; /* the thickness of the border */
+}
+
+.gradBorder::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: 0.65rem; /* Equivalent to rounded-lg */
+  padding: 0.8px;
+  background: linear-gradient(to bottom right, 
+  hsl(var(--primary)) 10%, 
+  hsl(var(--accent)) 15%, 
+  transparent 25%, 
+  transparent 100%
+);
+  transition: transform 0.7s linear;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glass {
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(4px);
+  }
+}
+
+@layer base {
+  :root {
+    --background: 74 0% 100%;
+  --foreground: 74 0% 10%;
+  --card: 74 0% 100%;
+  --card-foreground: 74 0% 15%;
+  --popover: 74 0% 100%;
+  --popover-foreground: 74 95% 10%;
+  --primary: 74 100% 53%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 74 10% 90%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 74 0% 10%;
+  --muted-foreground: 74 0% 40%;
+  --accent: 36 10% 90%;
+  --accent-foreground: 74 0% 15%;
+  --destructive: 0 50% 50%;
+  --destructive-foreground: 74 0% 100%;
+  --border: 74 20% 82%;
+  --input: 74 20% 50%;
+  --ring: 74 100% 53%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* constraints */
+    --header-height: 54px;
+  --chat-max-width: 32rem;
+  --chat-min-width: 545px;
+  --workbench-width: min(calc(100% - var(--chat-min-width)), 1536px);
+  --workbench-inner-width: var(--workbench-width);
+  --workbench-left: calc(100% - var(--workbench-width));
+  }
+  .dark {
+    --background: 240 5.9% 10%;
+    --foreground: 297 0% 100%;
+    --card: 297 0% 10%;
+    --card-foreground: 297 0% 100%;
+    --popover: 297 10% 5%;
+    --popover-foreground: 297 0% 100%;
+    --primary: 297 100% 65%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 297 10% 20%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 292 0% 45.38%;
+    --muted-foreground: 292 0% 65.38%;
+    --accent: 292 100% 83.55%;
+    --accent-foreground: 292 1.79% 9.82%;
+    --destructive: 0 50% 50%;
+    --destructive-foreground: 297 0% 100%;
+    --border: 292 0% 25.38%;
+    --input: 297 20% 50%;
+    --ring: 297 100% 65%;
+    --radius: 0.5rem;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 157 100% 68%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 292 100% 83.55%;
+    --sidebar-accent-foreground: 292 1.79% 9.82%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --header-height: 54px;
+    --chat-max-width: 32rem;
+    --chat-min-width: 545px;
+    --workbench-width: min(calc(100% - var(--chat-min-width)));
+    --workbench-inner-width: var(--workbench-width);
+    --workbench-left: calc(100% - var(--workbench-width));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+}
