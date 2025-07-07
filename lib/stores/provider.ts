@@ -16,6 +16,8 @@ export type TogetherAIModel = {
   | 'meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo'
   | 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo'
   | "Qwen/Qwen2.5-Coder-32B-Instruct"
+  | "deepseek-ai/DeepSeek-V3"
+  | "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"
   | 'Qwen/QwQ-32B-Preview';
   displayName: string;
 };
