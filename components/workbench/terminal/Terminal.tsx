@@ -78,7 +78,7 @@ export const Terminal = memo(
           resizeObserver.disconnect();
         };
       }
-    }, [term]);
+    }, [term, onTerminalReady, onTerminalResize]);
 
 
     useEffect(() => {
