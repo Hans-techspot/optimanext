@@ -42,7 +42,7 @@ export function usePromptEnhancer() {
           const chunk = decoder.decode(value);
           if (chunk && chunk.trim()) {
             if (!received) {
-              setInput('');
+              setInput(''); // Clear input only on first chunk
               received = true;
             }
             _input += chunk;

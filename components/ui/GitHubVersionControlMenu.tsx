@@ -27,12 +27,12 @@ export function GitHubVersionControlMenu({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="ml-2 flex items-center gap-1"
+          size="sm"
+          className="ml-2 px-3 py-1.5 hover:bg-accent/50 transition-colors rounded-md"
           aria-label="GitHub Version Control"
         >
           <Github className="w-5 h-5" />
-          <span className="hidden md:inline text-xs font-medium">
+          <span className="hidden md:inline text-sm font-medium ml-1.5">
             {repoName ? repoName : 'GitHub'}
           </span>
         </Button>

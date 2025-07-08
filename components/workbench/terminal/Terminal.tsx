@@ -10,9 +10,11 @@ const logger = createScopedLogger('Terminal');
 
 export interface TerminalRef {
   reloadStyles: () => void;
+  resetInput: () => void;
 }
 
 export interface TerminalProps {
+  preserveState?: boolean;
   className?: string;
   theme: Theme;
   readonly?: boolean;
@@ -27,7 +29,7 @@ export const Terminal = memo(
     const fitAddonRef = useRef<FitAddon | null>(null);
     const webLinksAddonRef = useRef<WebLinksAddon | null>(null);
 
-    useEffect(() => {
+    const createTerminal = () => {
       const terminal = new XTerm({
         cursorBlink: true,
         convertEol: true,
@@ -45,6 +47,11 @@ export const Terminal = memo(
       terminal.loadAddon(fitAddon);
       terminal.loadAddon(webLinksAddon);
 
+      return terminal;
+    };
+
+    useEffect(() => {
+      const terminal = createTerminal();
       setTerm(terminal);
 
       return () => {
@@ -53,6 +60,17 @@ export const Terminal = memo(
         }
       };
     }, []);
+
+    useEffect(() => {
+      if (term && terminalElementRef.current) {
+        term.open(terminalElementRef.current);
+        term.focus();
+        
+        // Reset input state
+        term.clear();
+        term.reset();
+      }
+    }, [term]);
 
     useEffect(() => {
       const element = terminalElementRef.current;
@@ -97,6 +115,12 @@ export const Terminal = memo(
             logger.warn('Terminal instance not found');
           }
         },
+        resetInput: () => {
+          if (term) {
+            term.reset();
+            term.focus();
+          }
+        }
       };
     }, [readonly, term]);
 

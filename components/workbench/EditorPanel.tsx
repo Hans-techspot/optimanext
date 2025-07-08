@@ -23,7 +23,7 @@ import { FileTree } from './FileTree';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
-import { CaretDown, ClockCounterClockwise, FloppyDisk, Plus, Terminal as TerminalIcon, TerminalWindow, TreeStructure } from '@phosphor-icons/react';
+import { CaretDown, CaretUp, ClockCounterClockwise, FloppyDisk, Plus, Terminal as TerminalIcon, TerminalWindow, TreeStructure } from '@phosphor-icons/react';
 import { type TerminalRef } from './terminal/Terminal';
 
 interface EditorPanelProps {
@@ -253,33 +253,57 @@ export const EditorPanel = memo(
                   );
                 })}
                 {terminalCount < MAX_TERMINALS && <Plus className='cursor-pointer' onClick={addTerminal} />}
-                <CaretDown
-                  className="ml-auto cursor-pointer"
-                  onClick={() => workbenchStore.toggleTerminal(false)}
-                />
+                {showTerminal ? (
+                  <div className="flex items-center gap-2 ml-auto">
+                    <div className="text-sm bg-background text-foreground border rounded px-2 py-1">
+                      Hide terminal
+                    </div>
+                    <CaretDown
+                      className="cursor-pointer"
+                      onClick={() => workbenchStore.toggleTerminal(false)}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 ml-auto">
+                    <div className="text-sm bg-background text-foreground border rounded px-2 py-1">
+                      Show terminal
+                    </div>
+                    <CaretUp
+                      className="cursor-pointer"
+                      onClick={() => workbenchStore.toggleTerminal(true)}
+                    />
+                  </div>
+                )}
               </div>
               {Array.from({ length: terminalCount + 1 }, (_, index) => {
                 const isActive = activeTerminal === index;
 
                 return (
-                  <Terminal
+                  <div
                     key={index}
                     className={cn('h-full overflow-hidden', {
                       hidden: !isActive,
+                      'flex flex-col': isActive,
                     })}
-                    ref={(ref) => {
-                      terminalRefs.current[index] = ref;
-                    }}
-                    onTerminalReady={(terminal) => {
-                      if (index === 0) {
-                        workbenchStore.attachBoltNextTerminal(terminal);
-                      } else {
-                        workbenchStore.attachTerminal(terminal);
-                      }
-                    }}
-                    onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
-                    theme={theme}
-                  />
+                  >
+                    {isActive && (
+                      <Terminal
+                        ref={(ref) => {
+                          terminalRefs.current[index] = ref;
+                        }}
+                        onTerminalReady={(terminal) => {
+                          if (index === 0) {
+                            workbenchStore.attachBoltNextTerminal(terminal);
+                          } else {
+                            workbenchStore.attachTerminal(terminal);
+                          }
+                        }}
+                        onTerminalResize={(cols, rows) => workbenchStore.onTerminalResize(cols, rows)}
+                        theme={theme}
+                        preserveState={true}
+                      />
+                    )}
+                  </div>
                 );
               })}
             </div>

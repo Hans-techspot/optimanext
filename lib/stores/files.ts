@@ -43,7 +43,7 @@ export class FilesStore {
 
   /**
    * Tracks the number of files without folders.
-   */
+   */                                                   
   #size = 0;
 
   /**

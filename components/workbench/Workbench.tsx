@@ -3,6 +3,7 @@ import { motion, type HTMLMotionProps, type Variants } from 'framer-motion';
 import { computed } from 'nanostores';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useGitHubAuth } from '@/hooks/useGitHubAuth';
+import { toast } from '@/hooks/use-toast';
 import {
   type OnChangeCallback as OnEditorChange,
   type OnScrollCallback as OnEditorScroll,
@@ -18,13 +19,11 @@ import { EditorPanel } from './EditorPanel';
 import { Preview } from './Preview';
 import { GitHubVersionControlMenu } from '@/components/ui/GitHubVersionControlMenu';
 import { RepoSelectModal } from '@/components/ui/RepoSelectModal';
-import { chatId } from '@/persistance/useChatHistory';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { chatStore } from '@/lib/stores/chat';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { useSidebar } from '../ui/sidebar';
 import { XCircle } from '@phosphor-icons/react';
-import { toast } from '@/hooks/use-toast';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
@@ -80,8 +79,8 @@ function useIsMobile() {
 }
 
 export const Workbench = memo(({ chatStarted, isStreaming, className }: WorkspaceProps) => {
-  renderLogger.trace('Workbench');
 
+  renderLogger.trace('Workbench');
 
   // --- GitHub Version Control State/Handlers ---
   const [repoModalOpen, setRepoModalOpen] = useState(false);
@@ -96,6 +95,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
     logout: handleGitHubLogout,
     refresh: refreshGitHubAuth,
   } = useGitHubAuth();
+  // useStore hooks for unsavedFiles and files (declare only once at the top)
 
   const handleRepoSelect = useCallback((repo: any) => {
     setSelectedRepo(repo);
@@ -109,23 +109,82 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
 
   const handlePushChanges = useCallback(() => {
     if (!authenticated) return handleGitHubSignIn(window.location.href);
-    // TODO: Implement push logic
-    alert('Push Changes (stub)');
-  }, [authenticated, handleGitHubSignIn]);
+    if (!selectedRepo) {
+      toast({ title: 'No repository selected', description: 'Please select a GitHub repository first.' });
+      return;
+    }
+    const unsavedFiles = workbenchStore.unsavedFiles.get();
+    if (!unsavedFiles || unsavedFiles.size === 0) {
+      toast({ title: 'No changes to push', description: 'There are no unsaved files to commit.' });
+      return;
+    }
+    if (!githubToken) {
+      toast({ title: 'No GitHub token', description: 'You must be authenticated to push changes.' });
+      return;
+    }
+    const files = workbenchStore.files.get();
+    const filesArr = Array.isArray(files) ? files : [];
+    (async () => {
+      try {
+        const { pushChanges } = await import('@/lib/github');
+        const filesToPush = Array.from(workbenchStore.unsavedFiles.get())
+          .map((filePath) => {
+            const file = filesArr.find((f: any) => f.path === filePath);
+            return file ? { path: file.path, content: file.content } : null;
+          })
+          .filter((f): f is { path: string; content: string } => Boolean(f));
+        await pushChanges({
+          token: githubToken,
+          owner: selectedRepo.owner.login || selectedRepo.owner,
+          repo: selectedRepo.name,
+          branch: selectedRepo.default_branch || 'main',
+          files: filesToPush,
+          commitMessage: `Commit from OptimaNext at ${new Date().toISOString()}`,
+        });
+        toast({ title: 'Push successful', description: 'Your changes have been pushed to GitHub.' });
+        workbenchStore.unsavedFiles.set(new Set());
+      } catch (err: any) {
+        toast({ title: 'Push failed', description: err.message || String(err) });
+      }
+    })();
+  }, [authenticated, handleGitHubSignIn, selectedRepo, githubToken, toast]);
 
   const handleViewCommits = useCallback(() => {
     if (!authenticated) return handleGitHubSignIn(window.location.href);
-    // TODO: Implement view commits logic
-    alert('View Commits (stub)');
-  }, [authenticated, handleGitHubSignIn]);
+    if (!selectedRepo) {
+      toast({ title: 'No repository selected', description: 'Please select a GitHub repository first.' });
+      return;
+    }
+    if (!githubToken) {
+      toast({ title: 'No GitHub token', description: 'You must be authenticated to view commits.' });
+      return;
+    }
+    (async () => {
+      try {
+        const { fetchCommits } = await import('@/lib/github');
+        const commits = await fetchCommits({
+          token: githubToken,
+          owner: selectedRepo.owner.login || selectedRepo.owner,
+          repo: selectedRepo.name,
+          branch: selectedRepo.default_branch || 'main',
+          perPage: 10,
+        });
+        toast({
+          title: 'Recent Commits',
+          description: commits.map((c: any) => `${c.commit.message} (${c.sha.slice(0, 7)})`).join('\n'),
+          duration: 10000,
+        });
+      } catch (err: any) {
+        toast({ title: 'Failed to fetch commits', description: err.message || String(err) });
+      }
+    })();
+  }, [authenticated, handleGitHubSignIn, selectedRepo, githubToken, toast]);
 
   const isMobile = useIsMobile();
   const hasPreview = useStore(computed(workbenchStore.previews, (previews) => previews.length > 0));
   const showWorkbench = useStore(workbenchStore.showWorkbench);
   const selectedFile = useStore(workbenchStore.selectedFile);
   const currentDocument = useStore(workbenchStore.currentDocument);
-  const unsavedFiles = useStore(workbenchStore.unsavedFiles);
-  const files = useStore(workbenchStore.files);
   const selectedView = useStore(workbenchStore.currentView);
   const { showChat } = useStore(chatStore);
   const { state } = useSidebar();
@@ -145,8 +204,11 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
   }, [hasPreview, isStreaming]);
 
   useEffect(() => {
-    workbenchStore.setDocuments(files);
-  }, [files]);
+    const files = workbenchStore.files.get();
+    if (files) {
+      workbenchStore.setDocuments(files);
+    }
+  }, [workbenchStore.files]);
 
   const onEditorChange = useCallback<OnEditorChange>((update) => {
     workbenchStore.setCurrentDocumentContent(update.content);
@@ -243,8 +305,8 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
                 editorDocument={currentDocument}
                 isStreaming={isStreaming}
                 selectedFile={selectedFile}
-                files={files}
-                unsavedFiles={unsavedFiles}
+                files={workbenchStore.files.get()}
+                unsavedFiles={workbenchStore.unsavedFiles.get()}
                 onFileSelect={onFileSelect}
                 onEditorScroll={onEditorScroll}
                 onEditorChange={onEditorChange}
