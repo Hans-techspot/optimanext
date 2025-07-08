@@ -2,6 +2,7 @@ import { useStore } from '@nanostores/react';
 import { motion, type HTMLMotionProps, type Variants } from 'framer-motion';
 import { computed } from 'nanostores';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useGitHubAuth } from '@/hooks/useGitHubAuth';
 import {
   type OnChangeCallback as OnEditorChange,
   type OnScrollCallback as OnEditorScroll,
@@ -15,6 +16,8 @@ import { cubicEasingFn } from '@/utils/easings';
 import { renderLogger } from '@/utils/logger';
 import { EditorPanel } from './EditorPanel';
 import { Preview } from './Preview';
+import { GitHubVersionControlMenu } from '@/components/ui/GitHubVersionControlMenu';
+import { RepoSelectModal } from '@/components/ui/RepoSelectModal';
 import { chatId } from '@/persistance/useChatHistory';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { chatStore } from '@/lib/stores/chat';
@@ -66,9 +69,9 @@ function useIsMobile() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-    
+
     checkMobile();
-    
+
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
@@ -79,6 +82,43 @@ function useIsMobile() {
 export const Workbench = memo(({ chatStarted, isStreaming, className }: WorkspaceProps) => {
   renderLogger.trace('Workbench');
 
+
+  // --- GitHub Version Control State/Handlers ---
+  const [repoModalOpen, setRepoModalOpen] = useState(false);
+  const [selectedRepo, setSelectedRepo] = useState<any>(null);
+  const {
+    authenticated,
+    username,
+    token: githubToken,
+    loading: authLoading,
+    error: authError,
+    login: handleGitHubSignIn,
+    logout: handleGitHubLogout,
+    refresh: refreshGitHubAuth,
+  } = useGitHubAuth();
+
+  const handleRepoSelect = useCallback((repo: any) => {
+    setSelectedRepo(repo);
+    setRepoModalOpen(false);
+  }, []);
+
+  const handleRepoCreate = useCallback((repo: any) => {
+    setSelectedRepo(repo);
+    setRepoModalOpen(false);
+  }, []);
+
+  const handlePushChanges = useCallback(() => {
+    if (!authenticated) return handleGitHubSignIn();
+    // TODO: Implement push logic
+    alert('Push Changes (stub)');
+  }, [authenticated, handleGitHubSignIn]);
+
+  const handleViewCommits = useCallback(() => {
+    if (!authenticated) return handleGitHubSignIn();
+    // TODO: Implement view commits logic
+    alert('View Commits (stub)');
+  }, [authenticated, handleGitHubSignIn]);
+
   const isMobile = useIsMobile();
   const hasPreview = useStore(computed(workbenchStore.previews, (previews) => previews.length > 0));
   const showWorkbench = useStore(workbenchStore.showWorkbench);
@@ -88,11 +128,9 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
   const files = useStore(workbenchStore.files);
   const selectedView = useStore(workbenchStore.currentView);
   const { showChat } = useStore(chatStore);
-  const {
-    state,
-  } = useSidebar()
+  const { state } = useSidebar();
 
-  const canHideChat = showWorkbench || !showChat
+  const canHideChat = showWorkbench || !showChat;
 
   const setSelectedView = (view: WorkbenchViewType) => {
     workbenchStore.currentView.set(view);
@@ -143,33 +181,51 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
 
   const innerWorkbench = (
     <div
-          className={
-            !isMobile 
-              ? cn(
-                  `h-full w-full max-w-full z-0 transition-[left,width] duration-200 boltnext-ease-cubic-bezier `,
-                )
-              : 'w-full h-full max-w-full '
-          }
-        >
-       <div className={cn(
-            'flex inset-0 h-full w-full max-w-full',
-          )}>
-          {!isMobile && <div className="h-full flex">
-            <button 
-              className='w-8 h-20 my-auto bg-transparent text-foreground z-50'
-              onClick={() => {
-                if (canHideChat) {
-                  chatStore.setKey('showChat', !showChat);
-                }
-              }}
-            >
-              {showChat ? <ChevronLeft/> : <ChevronRight/>}
-            </button>
-          </div>}
-         
+      className={
+        !isMobile
+          ? cn(
+            `h-full w-full max-w-full z-0 transition-[left,width] duration-200 boltnext-ease-cubic-bezier `,
+          )
+          : 'w-full h-full max-w-full '
+      }
+    >
+      <div className={cn(
+        'flex inset-0 h-full w-full max-w-full',
+      )}>
+        {!isMobile && <div className="h-full flex">
+          <button
+            className='w-8 h-20 my-auto bg-transparent text-foreground z-50'
+            onClick={() => {
+              if (canHideChat) {
+                chatStore.setKey('showChat', !showChat);
+              }
+            }}
+          >
+            {showChat ? <ChevronLeft /> : <ChevronRight />}
+          </button>
+        </div>}
+
         <div className={`w-full h-full flex flex-col bg-white/5  backdrop-blur-sm border  shadow-sm rounded-${isMobile ? 'none rounded-t-lg' : 'lg'} overflow-hidden`}>
           <div className="flex items-center px-3 py-2 border-b ">
             <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
+            {/* GitHub Version Control UI for Editor tab */}
+            {/* GitHub Version Control UI for Editor and Preview tabs */}
+            <GitHubVersionControlMenu
+              isAuthenticated={authenticated}
+              repoName={selectedRepo?.name}
+              onSignIn={handleGitHubSignIn}
+              onSelectRepo={() => setRepoModalOpen(true)}
+              onPushChanges={handlePushChanges}
+              onViewCommits={handleViewCommits}
+            />
+            <RepoSelectModal
+              open={repoModalOpen}
+              onClose={() => setRepoModalOpen(false)}
+              onSelect={handleRepoSelect}
+              onCreate={handleRepoCreate}
+              token={githubToken || ''}
+            />
+
             <div className="ml-auto" />
             <XCircle
               className="-mr-1 cursor-pointer text-lg"
@@ -216,7 +272,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
       variants={isMobile ? undefined : workbenchVariants}
       className={cn("z-workbench w-full h-full", className)}
     >
-          {innerWorkbench}
+      {innerWorkbench}
     </motion.div>
   ), [showWorkbench, isMobile, innerWorkbench, className]);
 
@@ -243,6 +299,7 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
 interface ViewProps extends HTMLMotionProps<'div'> {
   children: JSX.Element;
 }
+
 
 const View = memo(({ children, ...props }: ViewProps) => {
   return (

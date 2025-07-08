@@ -28,6 +28,7 @@
     "@codemirror/view": "^6.35.3",
     "@hookform/resolvers": "^3.9.1",
     "@nanostores/react": "^0.8.2",
+    "@octokit/rest": "^22.0.0",
     "@phosphor-icons/react": "^2.1.7",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.3",

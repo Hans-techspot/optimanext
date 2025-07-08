@@ -94,7 +94,7 @@ The application uses environment variables for configuration. Create a `.env.loc
 ## To Do
 
 *   **Error Auto-Fix:** Implement automatic error detection and correction in the generated code.
-*   **Version Control:** Enhance the GitHub integration to include version control features.
+*   **Version Control:** ✅ Enhanced the GitHub integration to include version control features.
 *   **Deployment:** Add the deployment process with more options and better automation.
 *   **Supabase Integration:** Integrate Supabase for database management for both app and user and user authentication.
 *   **Auto-Scroll Fix:** Resolve issues with auto-scrolling in the chat interface.
