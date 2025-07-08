@@ -31,8 +31,13 @@ export function useGitHubAuth() {
     checkStatus();
   }, [checkStatus]);
 
-  const login = useCallback(() => {
-    window.location.href = '/api/auth/github?action=authorize';
+  const login = useCallback((redirectPath?: string) => {
+    // If a redirectPath is provided, encode it in the state param
+    const state = redirectPath
+      ? `${crypto.randomUUID()}::${encodeURIComponent(redirectPath)}`
+      : crypto.randomUUID();
+    const url = `/api/auth/github?action=authorize&state=${state}`;
+    window.location.href = url;
   }, []);
 
   const logout = useCallback(async () => {

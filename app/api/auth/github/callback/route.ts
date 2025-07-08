@@ -46,7 +46,21 @@ export async function GET(request: NextRequest) {
   }
 
   // Set both token and username in httpOnly cookies
-  const response = NextResponse.redirect('/'); // Redirect to app home or dashboard
+  // Try to get intended redirect from state or fallback to /chat
+  let redirectTo = '/chat';
+  try {
+    // If you encode the intended redirect in the state param, decode here
+    // Example: state = `${uuid}::${redirectUrl}`
+    if (state && state.includes('::')) {
+      const [, url] = state.split('::');
+      if (url && url.startsWith('http')) {
+        redirectTo = url;
+      } else if (url && url.startsWith('/')) {
+        redirectTo = `https://optimanext.vercel.app${url}`;
+      }
+    }
+  } catch {}
+  const response = NextResponse.redirect(redirectTo);
   response.cookies.set('github_token', tokenData.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

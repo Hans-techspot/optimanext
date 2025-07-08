@@ -108,13 +108,13 @@ export const Workbench = memo(({ chatStarted, isStreaming, className }: Workspac
   }, []);
 
   const handlePushChanges = useCallback(() => {
-    if (!authenticated) return handleGitHubSignIn();
+    if (!authenticated) return handleGitHubSignIn(window.location.href);
     // TODO: Implement push logic
     alert('Push Changes (stub)');
   }, [authenticated, handleGitHubSignIn]);
 
   const handleViewCommits = useCallback(() => {
-    if (!authenticated) return handleGitHubSignIn();
+    if (!authenticated) return handleGitHubSignIn(window.location.href);
     // TODO: Implement view commits logic
     alert('View Commits (stub)');
   }, [authenticated, handleGitHubSignIn]);
