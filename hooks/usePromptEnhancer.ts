@@ -24,30 +24,31 @@ export function usePromptEnhancer() {
     });
 
     const reader = response.body?.getReader();
-
     const originalInput = input;
 
     if (reader) {
       const decoder = new TextDecoder();
-
       let _input = '';
       let _error;
+      let received = false;
 
       try {
-        setInput('');
-
+        // Only clear input if we actually get a non-empty chunk
         while (true) {
           const { value, done } = await reader.read();
-
           if (done) {
             break;
           }
-
-          _input += decoder.decode(value);
-
-          logger.trace('Set input', _input);
-
-          setInput(_input);
+          const chunk = decoder.decode(value);
+          if (chunk && chunk.trim()) {
+            if (!received) {
+              setInput('');
+              received = true;
+            }
+            _input += chunk;
+            logger.trace('Set input', _input);
+            setInput(_input);
+          }
         }
       } catch (error) {
         _error = error;
@@ -56,12 +57,20 @@ export function usePromptEnhancer() {
         if (_error) {
           logger.error(_error);
         }
-
         setEnhancingPrompt(false);
-        setPromptEnhanced(true);
-
+        // Only set promptEnhanced if we actually enhanced something
+        if (_input && _input.trim() && _input !== originalInput) {
+          setPromptEnhanced(true);
+        } else {
+          setPromptEnhanced(false);
+          // If nothing was received, restore original input
+          if (!_input || !_input.trim()) {
+            setInput(originalInput);
+          }
+        }
+        // Ensure final input is set
         setTimeout(() => {
-          setInput(_input);
+          setInput(_input && _input.trim() ? _input : originalInput);
         });
       }
     }

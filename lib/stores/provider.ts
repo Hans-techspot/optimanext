@@ -52,6 +52,8 @@ export const togetherModels: TogetherAIModel[] = [
   { id: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', displayName: 'Llama 3.3 70B' },
   { id: 'meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo', displayName: 'Meta Llama 3.1 405B' },
   { id: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', displayName: 'Meta Llama 3.1 70B' },
+  { id: 'deepseek-ai/DeepSeek-V3', displayName: 'DeepSeek V3' },
+  { id: 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8', displayName: 'Llama 4 Maverick' },
   { id: "Qwen/Qwen2.5-Coder-32B-Instruct", displayName: "Qwen 2.5 Coder 32B" },
   { id: 'Qwen/QwQ-32B-Preview', displayName: 'QwQ 32B' },
 ];
