@@ -3,6 +3,59 @@ import type { BoltNextArtifactData } from '@/types/artifact';
 import { createScopedLogger } from '@/utils/logger';
 import { unreachable } from '@/utils/unreachable';
 
+enum ErrorCode {
+  // Schema validation errors
+  INVALID_ARTIFACT = 'ERR_INVALID_ARTIFACT',
+  MISSING_ARTIFACT_TITLE = 'ERR_MISSING_ARTIFACT_TITLE',
+  MISSING_ARTIFACT_ID = 'ERR_MISSING_ARTIFACT_ID',
+  INVALID_ACTION = 'ERR_INVALID_ACTION',
+  
+  // Parsing errors
+  MALFORMED_TAG = 'ERR_MALFORMED_TAG',
+  UNEXPECTED_END = 'ERR_UNEXPECTED_END',
+  
+  // Recovery errors
+  RECOVERY_FAILED = 'ERR_RECOVERY_FAILED'
+}
+
+class SchemaValidator {
+  static validateArtifact(data: BoltNextArtifactData): { valid: boolean; errors: ErrorCode[] } {
+    const errors: ErrorCode[] = [];
+    
+    if (!data.title) {
+      errors.push(ErrorCode.MISSING_ARTIFACT_TITLE);
+    }
+    
+    if (!data.id) {
+      errors.push(ErrorCode.MISSING_ARTIFACT_ID);
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+
+  static validateAction(action: BoltNextAction): { valid: boolean; errors: ErrorCode[] } {
+    const errors: ErrorCode[] = [];
+    
+    // Validate common action properties
+    if (!action.type) {
+      errors.push(ErrorCode.INVALID_ACTION);
+    }
+    
+    // Validate file action specific properties
+    if (action.type === 'file' && !(action as FileAction).filePath) {
+      errors.push(ErrorCode.INVALID_ACTION);
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    };
+  }
+}
+
 const ARTIFACT_TAG_OPEN = '<boltnextArtifact';
 const ARTIFACT_TAG_CLOSE = '</boltnextArtifact>';
 const ARTIFACT_ACTION_TAG_OPEN = '<boltnextAction';
@@ -292,3 +345,4 @@ const createArtifactElement: ElementFactory = (props) => {
 function camelToDashCase(input: string) {
   return input.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
+
