@@ -38,6 +38,7 @@ if (typeof window !== 'undefined') {
             description: message.message,
             content: `Error occurred at ${message.pathname}${message.search}${message.hash}\nPort: ${message.port}\n\nStack trace:\n${cleanStackTrace(message.stack || '')}`,
             source: 'preview',
+            timestamp: Date.now(),
           });
         }
       });
